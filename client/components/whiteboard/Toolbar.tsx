@@ -128,6 +128,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   onAskAI,
 }) => {
   const [isShapesPopoverOpen, setIsShapesPopoverOpen] = useState(false);
+  const [isSizePopoverOpen, setIsSizePopoverOpen] = useState(false);
   const [activeMobileMenu, setActiveMobileMenu] = useState<'none' | 'shapes' | 'objects' | 'media' | 'style' | 'more'>('none');
 
   const isShapeActive = SHAPE_TOOLS.some((s) => s.tool === tool);
@@ -678,6 +679,66 @@ export const Toolbar: React.FC<ToolbarProps> = ({
               className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
             />
           </label>
+        </div>
+
+        {/* DESKTOP STROKE / ERASER / FONT SIZE CONTROL */}
+        <div className="hidden sm:flex items-center gap-1 pr-1.5 border-r border-slate-800 shrink-0 relative">
+          <button
+            onClick={() => setIsSizePopoverOpen((prev) => !prev)}
+            title={`Adjust ${tool === 'text' ? 'Font' : tool === 'eraser' ? 'Eraser' : 'Stroke'} Size (${tool === 'text' ? Math.max(12, size * 4) : size}px)`}
+            className={cn(
+              'p-1.5 rounded-xl transition-all flex items-center gap-1.5 text-xs font-mono font-medium text-slate-300 hover:text-white shrink-0 cursor-pointer',
+              isSizePopoverOpen ? 'bg-blue-600/30 text-blue-400 border border-blue-500/40' : 'hover:bg-slate-800'
+            )}
+          >
+            <div
+              style={{
+                width: Math.max(6, Math.min(16, size)),
+                height: Math.max(6, Math.min(16, size)),
+              }}
+              className="rounded-full bg-blue-400 shrink-0"
+            />
+            <span className="text-[11px] font-mono font-semibold">{tool === 'text' ? `${Math.max(12, size * 4)}px` : `${size}px`}</span>
+          </button>
+
+          {/* Size Popover Slider Menu */}
+          {isSizePopoverOpen && (
+            <div className="absolute bottom-12 left-1/2 -translate-x-1/2 bg-slate-900/95 backdrop-blur-2xl border border-slate-800 p-3 rounded-2xl shadow-2xl z-50 flex flex-col gap-2.5 min-w-[180px] animate-in fade-in zoom-in-95">
+              <div className="flex items-center justify-between text-[11px] font-mono text-slate-400">
+                <span>{tool === 'text' ? 'Font Size' : tool === 'eraser' ? 'Eraser Size' : 'Stroke Size'}</span>
+                <span className="text-blue-400 font-bold font-mono">{tool === 'text' ? `${Math.max(12, size * 4)}px` : `${size}px`}</span>
+              </div>
+              <input
+                type="range"
+                min={tool === 'text' ? 12 : tool === 'eraser' ? 4 : 1}
+                max={tool === 'text' ? 64 : tool === 'eraser' ? 80 : 50}
+                value={tool === 'text' ? Math.max(12, size * 4) : size}
+                onChange={(e) => {
+                  const val = Number(e.target.value);
+                  onSizeChange(tool === 'text' ? Math.round(val / 4) : val);
+                }}
+                className="w-full accent-blue-500 h-2 bg-slate-800 rounded-lg cursor-pointer"
+              />
+              {/* Quick Size Preset Buttons */}
+              <div className="flex items-center justify-between gap-1 pt-1 border-t border-slate-800">
+                {(tool === 'eraser' ? [8, 16, 24, 40, 60] : tool === 'text' ? [14, 18, 24, 32, 48] : [2, 4, 8, 16, 28]).map((sz) => (
+                  <button
+                    key={sz}
+                    onClick={() => {
+                      onSizeChange(tool === 'text' ? Math.round(sz / 4) : sz);
+                      setIsSizePopoverOpen(false);
+                    }}
+                    className={cn(
+                      'w-7 h-7 rounded-lg text-[10px] font-mono flex items-center justify-center transition-all cursor-pointer border border-slate-800',
+                      (tool === 'text' ? Math.max(12, size * 4) : size) === sz ? 'bg-blue-600 text-white font-bold border-blue-500' : 'hover:bg-slate-800 text-slate-400'
+                    )}
+                  >
+                    {sz}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* DESKTOP ACTIONS (Undo, Redo, Delete Selected, Clear, Export) */}
