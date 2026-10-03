@@ -1,0 +1,199 @@
+// Prisma schema for Real-Time Collaborative Whiteboard Application
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  avatarUrl    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  ownedRooms      Room[]        @relation("RoomOwner")
+  roomMemberships RoomMember[]
+  strokes         Stroke[]
+  activityLogs    ActivityLog[]
+  boardRevisions  BoardRevision[]
+
+  @@map("users")
+}
+
+model Room {
+  id          String   @id @default(uuid())
+  roomCode    String   @unique
+  name        String   @default("Untitled Whiteboard")
+  description String?
+  ownerId     String?
+  owner       User?    @relation("RoomOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  hostUserId  String?
+  isLocked    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  members      RoomMember[]
+  strokes      Stroke[]
+  revisions    BoardRevision[]
+  activityLogs ActivityLog[]
+  lectureSessions LectureSession[]
+
+  @@map("rooms")
+}
+
+model RoomMember {
+  id        String   @id @default(uuid())
+  roomId    String
+  room      Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      String   @default("EDITOR") // HOST, EDITOR, VIEWER
+  joinedAt  DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([roomId, userId])
+  @@map("room_members")
+}
+
+model Stroke {
+  id            String   @id @default(uuid())
+  roomId        String
+  room          Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  userId        String?
+  user          User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  tool          String   @default("brush")
+  color         String   @default("#000000")
+  size          Int      @default(4)
+  fillColor     String?
+  text          String?
+  x             Float?
+  y             Float?
+  width         Float?
+  height        Float?
+  fontSize      Int?
+  rotation      Float?   @default(0)
+  childIds      String?  // JSON array string of child stroke IDs for groups
+  assetUrl      String?  // URL/path for image / PDF page objects
+  isHighlighter Boolean  @default(false)
+  fromId        String?
+  toId          String?
+  points        String   // Serialized JSON string of Point[]
+  isDeleted     Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([roomId, isDeleted])
+  @@map("strokes")
+}
+
+model BoardRevision {
+  id         String   @id @default(uuid())
+  roomId     String
+  room       Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  label      String   @default("Checkpoint")
+  boardState String   // Serialized JSON string of stroke array
+  createdBy  String?
+  createdAt  DateTime @default(now())
+
+  creator    User?    @relation(fields: [createdBy], references: [id], onDelete: SetNull)
+
+  @@index([roomId, createdAt])
+  @@map("board_revisions")
+}
+
+model ActivityLog {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  roomId    String?
+  room      Room?    @relation(fields: [roomId], references: [id], onDelete: SetNull)
+  roomCode  String?
+  roomName  String?
+  action    String   // BOARD_CREATED, OBJECT_CREATED, OBJECT_UPDATED, OBJECT_DELETED, BOARD_SHARED, LECTURE_STARTED, LECTURE_ENDED, REVISION_CREATED
+  details   String?
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@map("activity_logs")
+}
+
+model LectureSession {
+  id              String                     @id @default(uuid())
+  roomCode        String
+  startedAt       BigInt
+  endedAt         BigInt?
+  status          String                     @default("ACTIVE") // ACTIVE, COMPLETED, CANCELLED
+  createdBy       String?
+  createdByName   String?
+  notesCache      String?                    // Serialized JSON of StructuredLectureNotes
+  quizCache       String?                    // Serialized JSON of LectureQuizResponse
+  flashcardsCache String?                    // Serialized JSON of LectureFlashcardsResponse
+  createdAt       DateTime                   @default(now())
+  updatedAt       DateTime                   @updatedAt
+
+  room            Room?                      @relation(fields: [roomCode], references: [roomCode], onDelete: Cascade)
+  events          LectureEvent[]
+  snapshots       LectureSnapshot[]
+  transcripts     LectureTranscriptSegment[]
+
+  @@index([roomCode, status])
+  @@index([roomCode, startedAt])
+  @@map("lecture_sessions")
+}
+
+model LectureEvent {
+  id                String         @id @default(uuid())
+  lectureSessionId  String
+  lectureSession    LectureSession @relation(fields: [lectureSessionId], references: [id], onDelete: Cascade)
+  type              String
+  timestamp         BigInt
+  timeOffsetSeconds Int            @default(0)
+  userId            String?
+  userName          String?
+  strokeId          String?
+  objectType        String?
+  summary           String
+  metadata          String?        // JSON string of extra details
+
+  @@index([lectureSessionId, timestamp])
+  @@map("lecture_events")
+}
+
+model LectureSnapshot {
+  id                String         @id @default(uuid())
+  lectureSessionId  String
+  lectureSession    LectureSession @relation(fields: [lectureSessionId], references: [id], onDelete: Cascade)
+  timestamp         BigInt
+  timeOffsetSeconds Int            @default(0)
+  title             String?
+  objectCount       Int            @default(0)
+  textSummary       String
+  boardState        String         // Serialized JSON of board state at this snapshot
+
+  @@index([lectureSessionId, timestamp])
+  @@map("lecture_snapshots")
+}
+
+model LectureTranscriptSegment {
+  id                String         @id @default(uuid())
+  lectureSessionId  String
+  lectureSession    LectureSession @relation(fields: [lectureSessionId], references: [id], onDelete: Cascade)
+  startTime         BigInt
+  endTime           BigInt
+  timeOffsetSeconds Int            @default(0)
+  text              String
+  speakerId         String?
+  speakerName       String?
+  confidence        Float?
+  createdAt         DateTime       @default(now())
+
+  @@index([lectureSessionId, startTime])
+  @@map("lecture_transcript_segments")
+}
