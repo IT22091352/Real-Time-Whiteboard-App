@@ -9,6 +9,7 @@ import {
   Hand,
   Radio,
   Minus,
+  Plus,
   MoveRight,
   Square,
   Circle,
@@ -130,6 +131,22 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   const [isShapesPopoverOpen, setIsShapesPopoverOpen] = useState(false);
   const [isSizePopoverOpen, setIsSizePopoverOpen] = useState(false);
   const [activeMobileMenu, setActiveMobileMenu] = useState<'none' | 'shapes' | 'objects' | 'media' | 'style' | 'more'>('none');
+
+  const SIZE_STEPS = [1, 2, 3, 4, 6, 8, 12, 16, 20, 24, 32, 40, 48, 64];
+
+  const handleDecreaseSize = () => {
+    const currentVal = tool === 'text' ? Math.max(12, size * 4) : size;
+    const lowerSteps = SIZE_STEPS.filter((s) => s < currentVal);
+    const nextVal = lowerSteps.length > 0 ? lowerSteps[lowerSteps.length - 1] : 1;
+    onSizeChange(tool === 'text' ? Math.round(nextVal / 4) : nextVal);
+  };
+
+  const handleIncreaseSize = () => {
+    const currentVal = tool === 'text' ? Math.max(12, size * 4) : size;
+    const higherSteps = SIZE_STEPS.filter((s) => s > currentVal);
+    const nextVal = higherSteps.length > 0 ? higherSteps[0] : 64;
+    onSizeChange(tool === 'text' ? Math.round(nextVal / 4) : nextVal);
+  };
 
   const isShapeActive = SHAPE_TOOLS.some((s) => s.tool === tool);
   const activeShapeObj = SHAPE_TOOLS.find((s) => s.tool === tool) || SHAPE_TOOLS[2]; // Default rectangle
@@ -682,23 +699,39 @@ export const Toolbar: React.FC<ToolbarProps> = ({
         </div>
 
         {/* DESKTOP STROKE / ERASER / FONT SIZE CONTROL */}
-        <div className="hidden sm:flex items-center gap-1 pr-1.5 border-r border-slate-800 shrink-0 relative">
+        <div className="hidden sm:flex items-center gap-0.5 pr-1.5 border-r border-slate-800 shrink-0 relative bg-slate-950/60 p-0.5 rounded-xl border border-slate-800/80">
+          <button
+            onClick={handleDecreaseSize}
+            title="Decrease Size (-)"
+            className="p-1.5 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-slate-100 transition-colors cursor-pointer"
+          >
+            <Minus className="w-3.5 h-3.5" />
+          </button>
+
           <button
             onClick={() => setIsSizePopoverOpen((prev) => !prev)}
             title={`Adjust ${tool === 'text' ? 'Font' : tool === 'eraser' ? 'Eraser' : 'Stroke'} Size (${tool === 'text' ? Math.max(12, size * 4) : size}px)`}
             className={cn(
-              'p-1.5 rounded-xl transition-all flex items-center gap-1.5 text-xs font-mono font-medium text-slate-300 hover:text-white shrink-0 cursor-pointer',
-              isSizePopoverOpen ? 'bg-blue-600/30 text-blue-400 border border-blue-500/40' : 'hover:bg-slate-800'
+              'px-2 py-1 rounded-lg transition-all flex items-center gap-1.5 text-xs font-mono font-medium text-slate-300 hover:text-white shrink-0 cursor-pointer',
+              isSizePopoverOpen ? 'bg-blue-600/30 text-blue-400 border border-blue-500/40' : 'hover:bg-slate-800/80'
             )}
           >
             <div
               style={{
-                width: Math.max(6, Math.min(16, size)),
-                height: Math.max(6, Math.min(16, size)),
+                width: Math.max(5, Math.min(14, size)),
+                height: Math.max(5, Math.min(14, size)),
               }}
               className="rounded-full bg-blue-400 shrink-0"
             />
             <span className="text-[11px] font-mono font-semibold">{tool === 'text' ? `${Math.max(12, size * 4)}px` : `${size}px`}</span>
+          </button>
+
+          <button
+            onClick={handleIncreaseSize}
+            title="Increase Size (+)"
+            className="p-1.5 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-slate-100 transition-colors cursor-pointer"
+          >
+            <Plus className="w-3.5 h-3.5" />
           </button>
 
           {/* Size Popover Slider Menu */}
