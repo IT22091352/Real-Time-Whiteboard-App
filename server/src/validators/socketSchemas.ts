@@ -85,6 +85,7 @@ export const ObjectUpdateSchema = z.object({
   text: z.string().optional(),
   fillColor: z.string().optional(),
   color: z.string().optional(),
+  size: z.number().optional(),
   width: z.number().optional(),
   height: z.number().optional(),
   rotation: z.number().optional(),

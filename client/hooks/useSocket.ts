@@ -316,7 +316,7 @@ export function useSocket({
     socketRef.current.emit('object:move', payload);
   }, []);
 
-  const emitObjectUpdate = useCallback((payload: { strokeId: string; text?: string; fillColor?: string; color?: string; width?: number; height?: number; rotation?: number }) => {
+  const emitObjectUpdate = useCallback((payload: { strokeId: string; text?: string; fillColor?: string; color?: string; size?: number; width?: number; height?: number; rotation?: number }) => {
     socketRef.current.emit('object:update', payload);
   }, []);
 

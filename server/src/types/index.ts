@@ -88,7 +88,7 @@ export interface ClientToServerEvents {
   'drawing:update': (payload: Partial<StrokeData> & { strokeId: string; points: Point[] }) => void;
   'drawing:end': (payload: { strokeId: string }) => void;
   'object:move': (payload: { strokeId: string; x?: number; y?: number; rotation?: number; points?: Point[] }) => void;
-  'object:update': (payload: { strokeId: string; text?: string; fillColor?: string; color?: string; width?: number; height?: number; rotation?: number }) => void;
+  'object:update': (payload: { strokeId: string; text?: string; fillColor?: string; color?: string; size?: number; width?: number; height?: number; rotation?: number }) => void;
   'object:delete': (payload: { strokeId: string }) => void;
   'object:batch_move': (payload: { moves: Array<{ strokeId: string; x?: number; y?: number; rotation?: number; points?: Point[] }> }) => void;
   'object:batch_delete': (payload: { strokeIds: string[] }) => void;
@@ -119,7 +119,7 @@ export interface ServerToClientEvents {
   'drawing:update': (payload: Partial<StrokeData> & { strokeId: string; points: Point[] }) => void;
   'drawing:end': (payload: { strokeId: string }) => void;
   'object:move': (payload: { strokeId: string; x?: number; y?: number; rotation?: number; points?: Point[] }) => void;
-  'object:update': (payload: { strokeId: string; text?: string; fillColor?: string; color?: string; width?: number; height?: number; rotation?: number }) => void;
+  'object:update': (payload: { strokeId: string; text?: string; fillColor?: string; color?: string; size?: number; width?: number; height?: number; rotation?: number }) => void;
   'object:delete': (payload: { strokeId: string }) => void;
   'object:batch_move': (payload: { moves: Array<{ strokeId: string; x?: number; y?: number; rotation?: number; points?: Point[] }> }) => void;
   'object:batch_delete': (payload: { strokeIds: string[] }) => void;

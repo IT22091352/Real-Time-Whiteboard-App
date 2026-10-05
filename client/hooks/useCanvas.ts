@@ -248,9 +248,7 @@ export function useCanvas({
     const parent = canvas.parentElement;
     const rect = parent ? parent.getBoundingClientRect() : canvas.getBoundingClientRect();
 
-    const effectiveSize = e.pointerType === 'pen' && e.pressure > 0
-      ? Math.max(1, Math.round(size * (e.pressure * 1.5)))
-      : size;
+    const effectiveSize = size;
 
     // 0. HAND TOOL / MIDDLE-CLICK PANNING
     if (tool === 'hand' || e.button === 1) {

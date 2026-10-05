@@ -271,6 +271,60 @@ export default function WhiteboardPage({ params }: WhiteboardPageProps) {
     [updateStrokeObject, emitObjectUpdate]
   );
 
+  const handleSizeChange = useCallback(
+    (newSize: number) => {
+      setSize(newSize);
+      if (selectedIds.length > 0) {
+        selectedIds.forEach((id) => {
+          updateStrokeObject(id, { size: newSize });
+          emitObjectUpdate({ strokeId: id, size: newSize });
+        });
+      }
+    },
+    [selectedIds, updateStrokeObject, emitObjectUpdate]
+  );
+
+  const handleColorChange = useCallback(
+    (newColor: string) => {
+      setColor(newColor);
+      if (selectedIds.length > 0) {
+        selectedIds.forEach((id) => {
+          updateStrokeObject(id, { color: newColor });
+          emitObjectUpdate({ strokeId: id, color: newColor });
+        });
+      }
+    },
+    [selectedIds, updateStrokeObject, emitObjectUpdate]
+  );
+
+  const handleFillColorChange = useCallback(
+    (newFillColor: string) => {
+      setFillColor(newFillColor);
+      if (selectedIds.length > 0) {
+        selectedIds.forEach((id) => {
+          updateStrokeObject(id, { fillColor: newFillColor });
+          emitObjectUpdate({ strokeId: id, fillColor: newFillColor });
+        });
+      }
+    },
+    [selectedIds, updateStrokeObject, emitObjectUpdate]
+  );
+
+  const handleSelectObjects = useCallback(
+    (ids: string[]) => {
+      setSelectedIds(ids);
+      if (ids.length === 1) {
+        const target = strokes.find((s) => s.id === ids[0] && !s.isDeleted);
+        if (target) {
+          if (target.color) setColor(target.color);
+          if (target.fillColor) setFillColor(target.fillColor);
+          if (target.size) setSize(target.size);
+        }
+      }
+    },
+    [strokes]
+  );
+
   const handleDeleteSelected = useCallback(() => {
     if (selectedIds.length === 0) return;
 
@@ -693,7 +747,7 @@ export default function WhiteboardPage({ params }: WhiteboardPageProps) {
         remoteCursors={remoteCursors}
         remoteLasers={remoteLasers}
         localLaser={localLaser}
-        onSelectObjects={setSelectedIds}
+        onSelectObjects={handleSelectObjects}
         onStrokeStart={handleStrokeStart}
         onStrokeUpdate={handleStrokeUpdate}
         onStrokeEnd={handleStrokeEnd}
@@ -726,9 +780,9 @@ export default function WhiteboardPage({ params }: WhiteboardPageProps) {
           setTool(t);
           if (t !== 'select') setSelectedIds([]);
         }}
-        onColorChange={setColor}
-        onFillColorChange={setFillColor}
-        onSizeChange={setSize}
+        onColorChange={handleColorChange}
+        onFillColorChange={handleFillColorChange}
+        onSizeChange={handleSizeChange}
         onGridModeChange={setGridMode}
         onToggleSnapToGrid={() => setSnapToGrid((prev) => !prev)}
         onToggleLock={() => emitRoomLock(!isLocked)}

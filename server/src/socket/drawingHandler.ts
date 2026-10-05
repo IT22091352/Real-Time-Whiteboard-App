@@ -169,9 +169,9 @@ export function registerDrawingHandlers(
     const parsed = ObjectUpdateSchema.safeParse(rawPayload);
     if (!parsed.success) return;
 
-    const { strokeId, text, fillColor, color, width, height, rotation } = parsed.data;
+    const { strokeId, text, fillColor, color, size, width, height, rotation } = parsed.data;
 
-    const updated = updateStrokeObject(roomCode, strokeId, { text, fillColor, color, width, height, rotation });
+    const updated = updateStrokeObject(roomCode, strokeId, { text, fillColor, color, size, width, height, rotation });
     socket.to(roomCode).emit('object:update', parsed.data);
 
     if (dbRoomId && updated) {
